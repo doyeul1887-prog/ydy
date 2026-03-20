@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 출석 관리 시스템</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        /* 입력 폼 섹션 */
+        .input-card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* 상태 선택 버튼 */
+        .status-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-btn {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .status-btn.active[data-status="출석"] { background: var(--success-color); color: white; border-color: var(--success-color); }
+        .status-btn.active[data-status="결석"] { background: var(--danger-color); color: white; border-color: var(--danger-color); }
+        .status-btn.active[data-status="지각"] { background: var(--warning-color); color: white; border-color: var(--warning-color); }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* 리스트 섹션 */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+
+        .list-header h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        #attendance-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .record-card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .record-info .name {
+            font-weight: 700;
+            font-size: 1rem;
+            display: block;
+        }
+
+        .record-info .time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .badge-출석 { background-color: var(--success-color); }
+        .badge-결석 { background-color: var(--danger-color); }
+        .badge-지각 { background-color: var(--warning-color); }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .delete-btn:hover { color: var(--danger-color); }
+
+        /* 반응형 */
+        @media (max-width: 480px) {
+            body { padding: 15px; }
+            .status-options { grid-template-columns: 1fr 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>출석 체크 시스템</h1>
+    </header>
+
+    <!-- 입력부 -->
+    <div class="input-card">
+        <div class="form-group">
+            <label for="studentName">학생 이름</label>
+            <input type="text" id="studentName" placeholder="이름을 입력하세요">
+        </div>
+        
+        <label>상태 선택</label>
+        <div class="status-options" id="statusGroup">
+            <div class="status-btn active" data-status="출석">출석</div>
+            <div class="status-btn" data-status="결석">결석</div>
+            <div class="status-btn" data-status="지각">지각</div>
+        </div>
+
+        <button class="submit-btn" id="saveBtn">기록하기</button>
+    </div>
+
+    <!-- 리스트 출력부 -->
+    <div class="list-header">
+        <h2>최근 출석 기록</h2>
+        <span id="recordCount" style="font-size: 0.8rem; color: var(--text-muted);">0건</span>
+    </div>
+    <div id="attendance-list">
+        <!-- 데이터가 여기에 실시간으로 추가됨 -->
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+    // Firebase 앱 인스턴스 및 Firestore 라이브러리 임포트
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { 
+        getFirestore, collection, addDoc, onSnapshot, 
+        query, orderBy, serverTimestamp, deleteDoc, doc 
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    // --- [필독] 본인의 Firebase 설정값으로 변경해주세요 ---
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    // Firebase 초기화
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const attendanceCol = collection(db, "attendance");
+
+    // 상태 선택 버튼 로직
+    let selectedStatus = "출석";
+    const statusBtns = document.querySelectorAll('.status-btn');
+    
+    statusBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            statusBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedStatus = btn.dataset.status;
+        });
+    });
+
+    // 데이터 저장 함수
+    const saveBtn = document.getElementById('saveBtn');
+    const nameInput = document.getElementById('studentName');
+
+    saveBtn.addEventListener('click', async () => {
+        const name = nameInput.value.trim();
+        
+        if (!name) {
+            alert("학생 이름을 입력해주세요.");
+            return;
+        }
+
+        try {
+            await addDoc(attendanceCol, {
+                name: name,
+                status: selectedStatus,
+                timestamp: serverTimestamp()
+            });
+            nameInput.value = ""; // 입력창 초기화
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            alert("저장 중 오류가 발생했습니다.");
+        }
+    });
+
+    // 실시간 리스트 렌더링
+    const attendanceList = document.getElementById('attendance-list');
+    const recordCountText = document.getElementById('recordCount');
+
+    const q = query(attendanceCol, orderBy("timestamp", "desc"));
+
+    onSnapshot(q, (snapshot) => {
+        attendanceList.innerHTML = "";
+        recordCountText.innerText = `${snapshot.size}건`;
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const id = docSnap.id;
+            
+            // 시간 포맷팅
+            let timeStr = "방금 전";
+            if (data.timestamp) {
+                const date = data.timestamp.toDate();
+                timeStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'record-card';
+            card.innerHTML = `
+                <div class="record-info">
+                    <span class="name">${data.name}</span>
+                    <span class="time">${timeStr}</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span class="status-badge badge-${data.status}">${data.status}</span>
+                    <button class="delete-btn" onclick="deleteRecord('${id}')">×</button>
+                </div>
+            `;
+            attendanceList.appendChild(card);
+        });
+    });
+
+    // 삭제 기능 (전역 함수로 등록)
+    window.deleteRecord = async (id) => {
+        if(confirm("이 기록을 삭제하시겠습니까?")) {
+            await deleteDoc(doc(db, "attendance", id));
+        }
+    };
+</script>
+
+</body>
+</html>
